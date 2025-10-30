@@ -48,11 +48,17 @@ export function analyzeFreightData(records: FreightRecord[]): AnalysisResult {
     };
   });
 
-  // 获取日期范围
-  const dates = records.map((r) => r.date.getTime());
+  // 获取日期范围（优化大数据量处理）
+  let minTimestamp = Infinity;
+  let maxTimestamp = 0;
+  for (const record of records) {
+    const timestamp = record.date.getTime();
+    if (timestamp < minTimestamp) minTimestamp = timestamp;
+    if (timestamp > maxTimestamp) maxTimestamp = timestamp;
+  }
   const dateRange = {
-    start: new Date(Math.min(...dates)),
-    end: new Date(Math.max(...dates)),
+    start: new Date(minTimestamp),
+    end: new Date(maxTimestamp),
   };
 
   return {

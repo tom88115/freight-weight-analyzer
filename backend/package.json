@@ -4,9 +4,11 @@
   "description": "运费公斤段分析系统 - 后端服务",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "nodemon --exec ts-node src/index.ts",
+    "dev": "nodemon --exec ts-node src/startup.ts",
+    "dev:empty": "nodemon --exec ts-node src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node dist/startup.js",
+    "import": "ts-node src/scripts/importData.ts",
     "test": "jest"
   },
   "keywords": [

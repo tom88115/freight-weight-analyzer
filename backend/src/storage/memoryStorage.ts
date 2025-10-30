@@ -9,7 +9,10 @@ export const memoryStorage = {
       ...record,
       id: record.id || `mem_${Date.now()}_${index}`,
     }));
-    records.push(...newRecords);
+    // 使用循环避免堆栈溢出（大数据量时spread操作符会溢出）
+    for (const record of newRecords) {
+      records.push(record);
+    }
     return newRecords;
   },
 
