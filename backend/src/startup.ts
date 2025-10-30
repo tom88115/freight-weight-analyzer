@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import uploadRoutes from './routes/uploadRoutes';
 import analyticsRoutes from './routes/analyticsRoutes';
 import multiDimensionRoutes from './routes/multiDimensionRoutes';
+import freightReportRoutes from './routes/freightReportRoutes';
 import * as XLSX from 'xlsx';
 import { memoryStorage } from './storage/memoryStorage';
 import { FreightRecord } from './types';
@@ -26,6 +27,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/upload', uploadRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/multi-dimension', multiDimensionRoutes);
+app.use('/api/freight-report', freightReportRoutes);
 
 // 健康检查
 app.get('/health', (_req: Request, res: Response) => {

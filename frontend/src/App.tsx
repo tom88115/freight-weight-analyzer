@@ -1,10 +1,11 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { ConfigProvider, Layout, Menu } from 'antd';
-import { DashboardOutlined, BarChartOutlined } from '@ant-design/icons';
+import { DashboardOutlined, BarChartOutlined, FileTextOutlined } from '@ant-design/icons';
 import zhCN from 'antd/locale/zh_CN';
 import Dashboard from './pages/Dashboard';
 import MultiDimensionAnalysis from './pages/MultiDimensionAnalysis';
+import FreightAnalysisReport from './pages/FreightAnalysisReport';
 import 'dayjs/locale/zh-cn';
 
 const { Header, Content } = Layout;
@@ -30,12 +31,16 @@ const App: React.FC = () => {
               <Menu.Item key="/multi-dimension" icon={<BarChartOutlined />}>
                 <Link to="/multi-dimension">多维度分析</Link>
               </Menu.Item>
+              <Menu.Item key="/freight-report" icon={<FileTextOutlined />}>
+                <Link to="/freight-report">运费分析报表</Link>
+              </Menu.Item>
             </Menu>
           </Header>
           <Content style={{ background: '#f0f2f5' }}>
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/multi-dimension" element={<MultiDimensionAnalysis />} />
+              <Route path="/freight-report" element={<FreightAnalysisReport />} />
             </Routes>
           </Content>
         </Layout>
