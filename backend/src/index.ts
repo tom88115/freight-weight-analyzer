@@ -1,6 +1,5 @@
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
-import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import uploadRoutes from './routes/uploadRoutes';
 import analyticsRoutes from './routes/analyticsRoutes';
@@ -24,7 +23,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
 // 健康检查
-app.get('/health', (req: Request, res: Response) => {
+app.get('/health', (_req: Request, res: Response) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -32,7 +31,7 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 // 根路径
-app.get('/', (req: Request, res: Response) => {
+app.get('/', (_req: Request, res: Response) => {
   res.json({
     message: '运费公斤段分析系统 API',
     version: '1.0.0',
@@ -46,7 +45,7 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // 错误处理中间件
-app.use((err: any, req: Request, res: Response, next: any) => {
+app.use((err: any, _req: Request, res: Response, _next: any) => {
   console.error('服务器错误:', err);
   res.status(500).json({
     success: false,
@@ -54,30 +53,12 @@ app.use((err: any, req: Request, res: Response, next: any) => {
   });
 });
 
-// 数据库连接
-const connectDB = async () => {
-  try {
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/freight-analyzer';
-    await mongoose.connect(mongoURI);
-    console.log('✅ MongoDB 连接成功');
-  } catch (error) {
-    console.error('❌ MongoDB 连接失败:', error);
-    // 即使数据库连接失败，服务器也可以启动（用于测试）
-    console.log('⚠️  服务器将在没有数据库的情况下运行');
-  }
-};
-
 // 启动服务器
-const startServer = async () => {
-  await connectDB();
-  
-  app.listen(PORT, () => {
-    console.log(`🚀 服务器运行在 http://localhost:${PORT}`);
-    console.log(`📊 API 文档: http://localhost:${PORT}/`);
-  });
-};
-
-startServer();
+app.listen(PORT, () => {
+  console.log(`🚀 服务器运行在 http://localhost:${PORT}`);
+  console.log(`📊 API 文档: http://localhost:${PORT}/`);
+  console.log(`💾 使用内存存储（数据不会持久化）`);
+});
 
 export default app;
 

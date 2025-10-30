@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { parseExcelFile } from '../utils/excelParser';
-import FreightModel from '../models/FreightModel';
+import { memoryStorage } from '../storage/memoryStorage';
 import { UploadResponse } from '../types';
 
 /**
@@ -27,8 +27,8 @@ export const uploadExcel = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    // 保存到数据库
-    const savedRecords = await FreightModel.insertMany(records);
+    // 保存到内存存储
+    const savedRecords = await memoryStorage.insertMany(records);
 
     res.json({
       success: true,

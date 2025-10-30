@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
-import FreightModel from '../models/FreightModel';
+import { memoryStorage } from '../storage/memoryStorage';
 import { analyzeFreightData, filterByDateRange, filterByCarrier } from '../utils/dataAnalyzer';
-import { FreightRecord } from '../types';
 
 /**
  * 获取运费数据分析结果
@@ -10,21 +9,8 @@ export const getAnalytics = async (req: Request, res: Response): Promise<void> =
   try {
     const { startDate, endDate, carrier } = req.query;
 
-    // 从数据库获取所有记录
-    let records = await FreightModel.find().lean();
-
-    // 转换为 FreightRecord 类型
-    const freightRecords: FreightRecord[] = records.map((r: any) => ({
-      id: r._id.toString(),
-      orderNumber: r.orderNumber,
-      weight: r.weight,
-      cost: r.cost,
-      destination: r.destination,
-      carrier: r.carrier,
-      date: new Date(r.date),
-      weightRange: r.weightRange,
-      remarks: r.remarks,
-    }));
+    // 从内存存储获取所有记录
+    const freightRecords = await memoryStorage.find();
 
     // 应用筛选条件
     let filteredRecords = freightRecords;
@@ -78,14 +64,11 @@ export const getAllRecords = async (req: Request, res: Response): Promise<void> 
 
     const skip = (Number(page) - 1) * Number(limit);
 
-    const [records, total] = await Promise.all([
-      FreightModel.find(query)
-        .sort({ date: -1 })
-        .skip(skip)
-        .limit(Number(limit))
-        .lean(),
-      FreightModel.countDocuments(query),
-    ]);
+    const allRecords = await memoryStorage.find(query);
+    const total = allRecords.length;
+    const records = allRecords
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(skip, skip + Number(limit));
 
     res.json({
       success: true,
@@ -109,9 +92,9 @@ export const getAllRecords = async (req: Request, res: Response): Promise<void> 
 /**
  * 删除所有记录（仅用于开发/测试）
  */
-export const clearAllRecords = async (req: Request, res: Response): Promise<void> => {
+export const clearAllRecords = async (_req: Request, res: Response): Promise<void> => {
   try {
-    const result = await FreightModel.deleteMany({});
+    const result = await memoryStorage.deleteMany();
     res.json({
       success: true,
       message: `已删除 ${result.deletedCount} 条记录`,

@@ -1,6 +1,3 @@
-/**
- * 运费数据记录接口
- */
 export interface FreightRecord {
   _id?: string;
   orderNumber?: string;
@@ -13,9 +10,6 @@ export interface FreightRecord {
   remarks?: string;
 }
 
-/**
- * 重量段统计接口
- */
 export interface WeightRangeStats {
   range: string;
   count: number;
@@ -24,9 +18,6 @@ export interface WeightRangeStats {
   percentage: number;
 }
 
-/**
- * 分析结果接口
- */
 export interface AnalysisResult {
   totalRecords: number;
   totalCost: number;
@@ -38,9 +29,6 @@ export interface AnalysisResult {
   };
 }
 
-/**
- * API 响应接口
- */
 export interface ApiResponse<T = any> {
   success: boolean;
   message?: string;
@@ -53,4 +41,3 @@ export interface ApiResponse<T = any> {
     pages: number;
   };
 }
-

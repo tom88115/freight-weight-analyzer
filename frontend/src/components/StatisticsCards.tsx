@@ -3,7 +3,7 @@ import { Card, Row, Col, Statistic } from 'antd';
 import {
   FileTextOutlined,
   DollarOutlined,
-  AverageOutlined,
+  LineChartOutlined,
   CalendarOutlined,
 } from '@ant-design/icons';
 import { AnalysisResult } from '../types';
@@ -48,7 +48,7 @@ const StatisticsCards: React.FC<StatisticsCardsProps> = ({ data }) => {
             title="平均运费"
             value={data.averageCost}
             precision={2}
-            prefix={<AverageOutlined />}
+            prefix={<LineChartOutlined />}
             suffix="元"
             valueStyle={{ color: '#1890ff' }}
           />
