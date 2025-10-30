@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import uploadRoutes from './routes/uploadRoutes';
 import analyticsRoutes from './routes/analyticsRoutes';
+import multiDimensionRoutes from './routes/multiDimensionRoutes';
 import * as XLSX from 'xlsx';
 import { memoryStorage } from './storage/memoryStorage';
 import { FreightRecord } from './types';
@@ -24,6 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 // 路由
 app.use('/api/upload', uploadRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/multi-dimension', multiDimensionRoutes);
 
 // 健康检查
 app.get('/health', (_req: Request, res: Response) => {
@@ -89,6 +91,8 @@ async function loadInitialData() {
         const city = row['系统收货城市'] || '';
         const destination = province && city ? `${province}-${city}` : (province || city || '未知');
         
+        const orderAmount = parseFloat(row['订单金额'] || 0);
+        
         return {
           id: `record_${Date.now()}_${index}`,
           orderNumber: String(row['物流单号'] || row['内部订单号'] || ''),
@@ -98,9 +102,11 @@ async function loadInitialData() {
           carrier: row['物流公司'] || '未知',
           date,
           weightRange: row['公斤段'] || '未知',
+          platform: row['平台'] || '未知',
+          orderAmount: orderAmount >= 0 ? orderAmount : 0,
           remarks: [
-            row['平台'] && `${row['平台']}`,
-            row['店铺'] && `${row['店铺']}`,
+            row['店铺'] && `店铺:${row['店铺']}`,
+            row['订单类型'] && `类型:${row['订单类型']}`,
           ].filter(Boolean).join(' | '),
         };
       })

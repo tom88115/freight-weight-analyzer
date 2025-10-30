@@ -8,6 +8,8 @@ export interface FreightRecord {
   date: string;
   weightRange?: string;
   remarks?: string;
+  platform?: string;
+  orderAmount?: number;
 }
 
 export interface WeightRangeStats {
