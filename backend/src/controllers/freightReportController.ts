@@ -19,11 +19,21 @@ interface DailyReport {
   };
 }
 
+// 简单的内存缓存
+let reportCache: {
+  data: any;
+  timestamp: number;
+  recordCount: number;
+} | null = null;
+
+const CACHE_TTL = 60000; // 缓存60秒
+
 /**
  * 生成运费分析报表
  * GET /api/freight-report
  * 
  * 按日期+重量段+平台展示，类似Excel模板
+ * 支持缓存机制提升性能
  */
 export const getFreightReport = async (_req: Request, res: Response): Promise<void> => {
   try {
@@ -40,6 +50,24 @@ export const getFreightReport = async (_req: Request, res: Response): Promise<vo
       });
       return;
     }
+
+    // 检查缓存是否有效
+    const now = Date.now();
+    if (
+      reportCache && 
+      reportCache.recordCount === allRecords.length &&
+      (now - reportCache.timestamp) < CACHE_TTL
+    ) {
+      console.log('✅ 使用缓存数据，剩余有效期:', Math.floor((CACHE_TTL - (now - reportCache.timestamp)) / 1000), '秒');
+      res.json({
+        success: true,
+        data: reportCache.data,
+        cached: true,
+      });
+      return;
+    }
+
+    console.log('🔄 缓存失效或数据已更新，重新计算报表...');
 
     // 获取所有平台
     const allPlatforms = Array.from(new Set(allRecords.map(r => r.platform || '未知')));
@@ -146,17 +174,29 @@ export const getFreightReport = async (_req: Request, res: Response): Promise<vo
       };
     }
     
+    const responseData = {
+      dailyReports,
+      summary: {
+        totalOrderAmount,
+        totalFreight,
+        overallFreightRatio,
+        platformSummary,
+      },
+    };
+
+    // 更新缓存
+    reportCache = {
+      data: responseData,
+      timestamp: Date.now(),
+      recordCount: allRecords.length,
+    };
+    
+    console.log('✅ 报表计算完成，已缓存，有效期:', CACHE_TTL / 1000, '秒');
+
     res.json({
       success: true,
-      data: {
-        dailyReports,
-        summary: {
-          totalOrderAmount,
-          totalFreight,
-          overallFreightRatio,
-          platformSummary,
-        },
-      },
+      data: responseData,
+      cached: false,
     });
   } catch (error) {
     console.error('生成运费报表错误:', error);

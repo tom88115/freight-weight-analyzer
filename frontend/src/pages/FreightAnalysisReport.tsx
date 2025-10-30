@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Card, Table, Select, Spin, message, Statistic, Row, Col, Tag, Tooltip } from 'antd';
-import { InfoCircleOutlined } from '@ant-design/icons';
+import { useState, useEffect, useMemo } from 'react';
+import { Card, Table, Select, Spin, message, Statistic, Row, Col, Tag, Tooltip, Progress } from 'antd';
+import { InfoCircleOutlined, LoadingOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import axios from 'axios';
 import dayjs from 'dayjs';
@@ -40,6 +40,8 @@ interface ReportSummary {
 
 const FreightAnalysisReport = () => {
   const [loading, setLoading] = useState(true);
+  const [loadingStep, setLoadingStep] = useState('初始化...');
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const [data, setData] = useState<DailyReport[]>([]);
   const [summary, setSummary] = useState<ReportSummary | null>(null);
   const [selectedRange, setSelectedRange] = useState<string>('全公斤段');
@@ -51,11 +53,29 @@ const FreightAnalysisReport = () => {
 
   const fetchData = async () => {
     setLoading(true);
+    setLoadingProgress(0);
+    setLoadingStep('正在连接服务器...');
+    
     try {
-      const response = await axios.get('http://localhost:3000/api/freight-report');
+      setLoadingProgress(20);
+      setLoadingStep('正在请求数据...');
+      
+      const response = await axios.get('http://localhost:3000/api/freight-report', {
+        timeout: 30000, // 30秒超时
+      });
+      
+      setLoadingProgress(60);
+      setLoadingStep('数据接收完成，正在处理...');
+      
       if (response.data.success) {
+        setLoadingProgress(70);
+        setLoadingStep('正在解析报表数据...');
+        
         setData(response.data.data.dailyReports);
         setSummary(response.data.data.summary);
+        
+        setLoadingProgress(85);
+        setLoadingStep('正在提取重量段信息...');
         
         // 提取所有重量段
         const ranges = ['全公斤段', ...new Set(
@@ -64,29 +84,51 @@ const FreightAnalysisReport = () => {
             .filter((r: string) => r !== '全公斤段')
         )];
         setWeightRanges(ranges);
+        
+        setLoadingProgress(100);
+        setLoadingStep('加载完成！');
+        
+        message.success(`成功加载 ${response.data.data.dailyReports.length} 条数据`);
       } else {
         message.error('获取数据失败');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('获取数据错误:', error);
-      message.error('网络错误，请检查后端服务');
+      if (error.code === 'ECONNABORTED') {
+        message.error('请求超时，请检查后端服务是否运行');
+      } else if (error.response) {
+        message.error(`服务器错误: ${error.response.status}`);
+      } else if (error.request) {
+        message.error('无法连接到后端服务，请确认服务是否启动');
+      } else {
+        message.error('网络错误，请稍后重试');
+      }
     } finally {
-      setLoading(false);
+      // 延迟一下让用户看到100%
+      setTimeout(() => {
+        setLoading(false);
+      }, 500);
     }
   };
 
-  // 筛选数据
-  const filteredData = data.filter(item => 
-    selectedRange === '全公斤段' || item.weightRange === selectedRange
+  // 使用 useMemo 优化筛选数据计算
+  const filteredData = useMemo(() => 
+    data.filter(item => 
+      selectedRange === '全公斤段' || item.weightRange === selectedRange
+    ), 
+    [data, selectedRange]
   );
 
-  // 获取所有平台名称
-  const allPlatforms = data.length > 0 
-    ? Array.from(new Set(data.flatMap(d => Object.keys(d.platforms))))
-    : [];
+  // 使用 useMemo 优化平台名称提取
+  const allPlatforms = useMemo(() => 
+    data.length > 0 
+      ? Array.from(new Set(data.flatMap(d => Object.keys(d.platforms))))
+      : [],
+    [data]
+  );
 
-  // 构建表格列
-  const columns: ColumnsType<DailyReport> = [
+  // 使用 useMemo 优化表格列构建（避免每次渲染都重新创建）
+  const columns: ColumnsType<DailyReport> = useMemo(() => [
     {
       title: '日期',
       dataIndex: 'date',
@@ -175,12 +217,40 @@ const FreightAnalysisReport = () => {
         ],
       },
     ]),
-  ];
+  ], [allPlatforms]); // 添加依赖项
 
+  // 优化的加载界面
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '100px 0' }}>
-        <Spin size="large" tip="加载数据中..." />
+      <div style={{ 
+        textAlign: 'center', 
+        padding: '100px 50px',
+        maxWidth: 600,
+        margin: '0 auto'
+      }}>
+        <Spin 
+          indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />}
+          size="large" 
+        />
+        <div style={{ marginTop: 32 }}>
+          <h2 style={{ color: '#1890ff', marginBottom: 16 }}>
+            {loadingStep}
+          </h2>
+          <Progress 
+            percent={loadingProgress} 
+            status="active"
+            strokeColor={{
+              '0%': '#108ee9',
+              '100%': '#87d068',
+            }}
+          />
+          <p style={{ marginTop: 16, color: '#666' }}>
+            {loadingProgress < 60 && '正在从服务器获取数据...'}
+            {loadingProgress >= 60 && loadingProgress < 85 && '数据量较大，正在处理中...'}
+            {loadingProgress >= 85 && loadingProgress < 100 && '即将完成...'}
+            {loadingProgress === 100 && '加载完成！'}
+          </p>
+        </div>
       </div>
     );
   }
