@@ -47,7 +47,44 @@ export interface UploadResponse {
   success: boolean;
   message: string;
   recordsProcessed?: number;
-  data?: FreightRecord[];
+  data?: {
+    imported: number;
+    duplicates: number;
+    total: number;
+    currentDatabase: {
+      totalRecords: number;
+      dateRange: { min: string; max: string } | null;
+      platforms: string[];
+    };
+  };
+}
+
+/**
+ * Excel 验证响应接口
+ */
+export interface ValidationResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    file: {
+      totalRecords: number;
+      uniqueRecords: number;
+      duplicateRecords: number;
+      dateRange: { min: string; max: string };
+      platforms: { [key: string]: number };
+    };
+    currentDatabase: {
+      totalRecords: number;
+      dateRange: { min: string; max: string } | null;
+      platforms: string[];
+    };
+    duplicateSamples: Array<{
+      orderNumber: string;
+      date: string;
+      platform: string;
+      cost: number;
+    }>;
+  };
 }
 
 /**

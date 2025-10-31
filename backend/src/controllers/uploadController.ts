@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { parseExcelFile } from '../utils/excelParser';
 import { memoryStorage } from '../storage/memoryStorage';
-import { UploadResponse } from '../types';
+import { UploadResponse, ValidationResponse } from '../types';
 
 /**
  * 处理 Excel 文件上传（带去重）

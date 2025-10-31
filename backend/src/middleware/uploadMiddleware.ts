@@ -21,16 +21,13 @@ const storage = multer.diskStorage({
 
 // 文件过滤器
 const fileFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  const allowedTypes = [
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'application/vnd.ms-excel.sheet.macroEnabled.12',
-  ];
+  const ext = path.extname(file.originalname).toLowerCase();
+  const allowedExtensions = ['.xls', '.xlsx', '.csv'];
 
-  if (allowedTypes.includes(file.mimetype)) {
+  if (allowedExtensions.includes(ext)) {
     cb(null, true);
   } else {
-    cb(new Error('只允许上传 Excel 文件 (.xls, .xlsx)'));
+    cb(new Error('只允许上传 Excel (.xls, .xlsx) 或 CSV (.csv) 文件'));
   }
 };
 
