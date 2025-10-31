@@ -2,14 +2,14 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# 复制 package 文件
-COPY package*.json ./
+# 复制 backend 的 package 文件
+COPY backend/package*.json ./
 
 # 安装依赖
 RUN npm install
 
-# 复制源代码
-COPY . .
+# 复制 backend 源代码
+COPY backend/ ./
 
 # 编译 TypeScript
 RUN npm run build
