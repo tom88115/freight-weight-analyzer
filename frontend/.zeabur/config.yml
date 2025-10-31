@@ -1,0 +1,7 @@
+services:
+  frontend:
+    port: 8080
+    build:
+      type: dockerfile
+      dockerfile: Dockerfile
+
