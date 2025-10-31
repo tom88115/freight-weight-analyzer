@@ -13,8 +13,8 @@ RUN npm install
 COPY . .
 
 # 设置环境变量（将在构建时使用）
-ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 # 构建应用
 RUN npm run build
