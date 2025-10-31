@@ -3,14 +3,14 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# 复制 frontend 的 package 文件
-COPY frontend/package*.json ./
+# 复制 package 文件
+COPY package*.json ./
 
 # 安装依赖
 RUN npm install
 
-# 复制 frontend 源代码
-COPY frontend/ ./
+# 复制源代码
+COPY . ./
 
 # 设置环境变量（将在构建时使用）
 ARG VITE_API_BASE_URL
@@ -25,8 +25,8 @@ FROM nginx:alpine
 # 复制构建产物到 nginx
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# 复制 nginx 配置（从项目根目录的 frontend/nginx.conf）
-COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+# 复制 nginx 配置
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # 暴露端口
 EXPOSE 8080
