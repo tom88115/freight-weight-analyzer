@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Table, Spin, message, Card, Row, Col, Statistic, Progress, Divider } from 'antd';
+import { Table, Spin, message, Card, Row, Col, Statistic, Progress, Divider, Button, Space } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { LoadingOutlined, LineChartOutlined } from '@ant-design/icons';
+import { LoadingOutlined, LineChartOutlined, SortAscendingOutlined, SortDescendingOutlined } from '@ant-design/icons';
 import * as echarts from 'echarts';
 import axios from 'axios';
 import dayjs from 'dayjs';
@@ -11,11 +11,19 @@ dayjs.locale('zh-cn');
 
 // ===================== 渠道Logo映射 =====================
 const CHANNEL_LOGOS: { [key: string]: string } = {
-  '拼多多': 'https://img.alicdn.com/imgextra/i3/O1CN01xXGCPT1h3nXXvgXvK_!!6000000004221-2-tps-200-200.png', // 拼多多logo
-  '淘宝天猫': 'https://img.alicdn.com/imgextra/i1/O1CN01qQUlrI1MUNcEE8OXh_!!6000000001439-2-tps-200-200.png', // 淘宝logo
-  '抖音': 'https://lf3-cdn-tos.bytescm.com/obj/static/xitu_juejin_web/e08da34488b114bd4c665ba2fa520a31.svg', // 抖音logo
-  '京东商城': 'https://img10.360buyimg.com/img/jfs/t1/7020/27/13879/6490/5c5138d8E4df2e764/5a1216a3a5043c5d.png', // 京东logo
+  '拼多多': 'https://commimg.pddpic.com/pdd_dj/2022-08-08/8c13da93-fa82-455a-9ef5-c1945540c375.png',
+  '淘宝天猫': 'https://img.alicdn.com/imgextra/i4/O1CN01EYTRnM1aJ5ETFTKJK_!!6000000003303-2-tps-100-100.png',
+  '抖音': 'https://lf-cdn-tos.bytescm.com/obj/static/xitu_extension/static/icon.png',
+  '京东商城': 'https://storage.360buyimg.com/jdvideo-activity-bucket/pc_top_logo_new_1654851342699.png',
 };
+
+// ===================== 公斤段定义 =====================
+const WEIGHT_SEGMENTS = [
+  { key: '2.4-2.6', label: '2.4-2.6kg', min: 2.4, max: 2.6, desc: '单包猫砂' },
+  { key: '4.6-5.2', label: '4.6-5.2kg', min: 4.6, max: 5.2, desc: '双包猫砂' },
+  { key: '9.6-11', label: '9.6-11kg', min: 9.6, max: 11, desc: '四包猫砂' },
+  { key: '14-16', label: '14-16kg', min: 14, max: 16, desc: '六包猫砂' },
+];
 
 // ===================== 类型定义 =====================
 interface ChannelTrendDay {
@@ -107,12 +115,32 @@ const getChannelFreightRatioColor = (ratio: number, allRatios: number[]): string
   return '#ff4d4f'; // 红色：高于66%分位
 };
 
+/**
+ * 判断重量是否在指定公斤段范围内
+ */
+const isInWeightSegment = (weightRange: string, segmentKey: string): boolean => {
+  const segment = WEIGHT_SEGMENTS.find(s => s.key === segmentKey);
+  if (!segment) return false;
+  
+  // 从weightRange中提取数字范围，例如 "2-3kg" -> [2, 3]
+  const match = weightRange.match(/(\d+\.?\d*)-(\d+\.?\d*)/);
+  if (!match) return false;
+  
+  const rangeMin = parseFloat(match[1]);
+  const rangeMax = parseFloat(match[2]);
+  
+  // 判断是否有重叠
+  return !(rangeMax <= segment.min || rangeMin >= segment.max);
+};
+
 // ===================== 主组件 =====================
 const OperationsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [loadingStep, setLoadingStep] = useState('初始化...');
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [data, setData] = useState<DashboardData | null>(null);
+  const [dateOrder, setDateOrder] = useState<'asc' | 'desc'>('asc'); // 日期排序
+  const [selectedWeightSegment, setSelectedWeightSegment] = useState<string | null>(null); // 选中的公斤段
 
   useEffect(() => {
     fetchData();
@@ -154,14 +182,19 @@ const OperationsDashboard = () => {
     }
   };
 
-  // ==================== 计算表格数据（总运费） ====================
-  const totalFreightTableData = useMemo(() => {
+  // ==================== 计算表格数据（总运费或分公斤段） ====================
+  const tableData = useMemo(() => {
     if (!data) return [];
 
-    const tableData: TableDataRow[] = [];
     const { channelTrends } = data;
+    let filteredTrends = channelTrends;
 
-    for (const trend of channelTrends) {
+    // 如果选中了公斤段，则需要从原始数据中筛选
+    // 注意：这里需要后端提供更详细的数据，暂时使用全量数据
+    
+    const tableData: TableDataRow[] = [];
+
+    for (const trend of filteredTrends) {
       const row: TableDataRow = {
         key: trend.date,
         date: trend.date,
@@ -179,20 +212,35 @@ const OperationsDashboard = () => {
       tableData.push(row);
     }
 
-    return tableData;
-  }, [data]);
+    // 日期排序
+    return tableData.sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return dateOrder === 'asc' ? dateA - dateB : dateB - dateA;
+    });
+  }, [data, dateOrder, selectedWeightSegment]);
 
-  // ==================== 计算表格列（总运费） ====================
-  const totalFreightColumns = useMemo((): ColumnsType<TableDataRow> => {
+  // ==================== 计算表格列 ====================
+  const tableColumns = useMemo((): ColumnsType<TableDataRow> => {
     if (!data) return [];
 
     const columns: ColumnsType<TableDataRow> = [
       {
-        title: '日期',
+        title: (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>日期</span>
+            <Button
+              type="link"
+              size="small"
+              icon={dateOrder === 'asc' ? <SortAscendingOutlined /> : <SortDescendingOutlined />}
+              onClick={() => setDateOrder(dateOrder === 'asc' ? 'desc' : 'asc')}
+            />
+          </div>
+        ),
         dataIndex: 'dateDisplay',
         key: 'date',
         fixed: 'left',
-        width: 80,
+        width: 100,
         align: 'center',
         render: (text: string, record: TableDataRow) => (
           <div>
@@ -222,17 +270,20 @@ const OperationsDashboard = () => {
                 <img 
                   src={CHANNEL_LOGOS[channel]} 
                   alt={channel} 
-                  style={{ width: 20, height: 20, marginRight: 6 }}
+                  style={{ width: 24, height: 24, marginRight: 6, objectFit: 'contain' }}
                 />
               )}
               <strong>{channel}</strong>
             </div>
-            <div style={{ fontSize: '12px', color: '#999' }}>
+            <div style={{ fontSize: '12px', color: '#999', marginBottom: 4 }}>
               销售额占比 {summary.salesRatio.toFixed(1)}%
+            </div>
+            <div style={{ fontSize: '12px', color: '#666' }}>
+              月平均运费占比 {summary.avgFreightRatio.toFixed(2)}%
             </div>
             {/* 渠道运费占比趋势图 */}
             <div 
-              id={`trend-${channel}`} 
+              id={`trend-${channel}-${selectedWeightSegment || 'total'}`}
               style={{ width: '100%', height: 60, marginTop: 8 }}
             />
           </div>
@@ -291,7 +342,7 @@ const OperationsDashboard = () => {
     }
 
     return columns;
-  }, [data]);
+  }, [data, dateOrder, selectedWeightSegment]);
 
   // ==================== 渲染趋势图 ====================
   useEffect(() => {
@@ -303,7 +354,7 @@ const OperationsDashboard = () => {
     setTimeout(() => {
       sortedChannels.forEach(summary => {
         const channel = summary.channel;
-        const containerId = `trend-${channel}`;
+        const containerId = `trend-${channel}-${selectedWeightSegment || 'total'}`;
         const container = document.getElementById(containerId);
         
         if (!container) return;
@@ -359,136 +410,7 @@ const OperationsDashboard = () => {
         myChart.setOption(option);
       });
     }, 100);
-  }, [data]);
-
-  // ==================== 计算分公斤段表格数据 ====================
-  const weightSegmentTableData = useMemo(() => {
-    if (!data) return [];
-
-    const tableData: TableDataRow[] = [];
-    const allWeightRanges = new Set<string>();
-
-    // 收集所有公斤段
-    data.weightDistributions.forEach(dist => {
-      Object.keys(dist.weights).forEach(wr => allWeightRanges.add(wr));
-    });
-
-    // 为每个公斤段创建一行
-    allWeightRanges.forEach(weightRange => {
-      const row: TableDataRow = {
-        key: weightRange,
-        date: weightRange,
-        dateDisplay: weightRange,
-        weekday: '',
-      };
-
-      data.channelSummaries.forEach(summary => {
-        const channel = summary.channel;
-        const dist = data.weightDistributions.find(d => d.channel === channel);
-        const weightStats = dist?.weights[weightRange];
-
-        if (weightStats) {
-          row[`${channel}_freight`] = weightStats.freight;
-          row[`${channel}_freightRatio`] = weightStats.freightRatio;
-          row[`${channel}_orderCount`] = weightStats.orderCount;
-          row[`${channel}_avgFreight`] = weightStats.avgFreight;
-        }
-      });
-
-      tableData.push(row);
-    });
-
-    return tableData;
-  }, [data]);
-
-  // ==================== 计算分公斤段表格列 ====================
-  const weightSegmentColumns = useMemo((): ColumnsType<TableDataRow> => {
-    if (!data) return [];
-
-    const columns: ColumnsType<TableDataRow> = [
-      {
-        title: '重量段',
-        dataIndex: 'dateDisplay',
-        key: 'weightRange',
-        fixed: 'left',
-        width: 100,
-        align: 'center',
-        render: (text: string) => <strong>{text}</strong>,
-      },
-    ];
-
-    const sortedChannels = [...data.channelSummaries].sort((a, b) => b.salesRatio - a.salesRatio);
-
-    for (const summary of sortedChannels) {
-      const channel = summary.channel;
-      const dist = data.weightDistributions.find(d => d.channel === channel);
-      if (!dist) continue;
-
-      // 获取该渠道所有公斤段的运费占比
-      const weightRatios = Object.values(dist.weights).map(w => w.freightRatio);
-
-      columns.push({
-        title: (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {CHANNEL_LOGOS[channel] && (
-                <img 
-                  src={CHANNEL_LOGOS[channel]} 
-                  alt={channel} 
-                  style={{ width: 20, height: 20, marginRight: 6 }}
-                />
-              )}
-              <strong>{channel}</strong>
-            </div>
-          </div>
-        ),
-        key: channel,
-        align: 'center',
-        children: [
-          {
-            title: '运费',
-            dataIndex: `${channel}_freight`,
-            key: `${channel}_freight`,
-            align: 'right',
-            width: 80,
-            render: (value: number) => value ? formatCurrency(value) : '-',
-          },
-          {
-            title: '占该渠道运费比例',
-            dataIndex: `${channel}_freightRatio`,
-            key: `${channel}_freightRatio`,
-            align: 'center',
-            width: 120,
-            render: (ratio: number) => {
-              if (!ratio) return '-';
-              const color = getChannelFreightRatioColor(ratio, weightRatios);
-              return (
-                <span style={{ 
-                  color, 
-                  fontWeight: 'bold',
-                  padding: '2px 8px',
-                  borderRadius: 4,
-                  backgroundColor: `${color}20`,
-                }}>
-                  {ratio.toFixed(2)}%
-                </span>
-              );
-            },
-          },
-          {
-            title: '订单数',
-            dataIndex: `${channel}_orderCount`,
-            key: `${channel}_orderCount`,
-            align: 'center',
-            width: 70,
-            render: (value: number) => value || '-',
-          },
-        ],
-      });
-    }
-
-    return columns;
-  }, [data]);
+  }, [data, selectedWeightSegment]);
 
   if (loading) {
     return (
@@ -560,44 +482,72 @@ const OperationsDashboard = () => {
         </Row>
       </Card>
 
-      {/* 总运费表格 */}
-      <Card 
-        title={
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <LineChartOutlined style={{ marginRight: 8, fontSize: 18 }} />
-            <span style={{ fontSize: 16, fontWeight: 'bold' }}>
-              总运费明细 ({data.summary.dateRange.start} 至 {data.summary.dateRange.end})
-            </span>
-          </div>
-        }
-        style={{ marginBottom: 24 }}
-      >
-        <Table
-          columns={totalFreightColumns}
-          dataSource={totalFreightTableData}
-          bordered
-          size="small"
-          pagination={false}
-          scroll={{ x: 'max-content' }}
-        />
+      {/* 公斤段卡片选择 */}
+      <Card title="公斤段分析" style={{ marginBottom: 24 }}>
+        <Space size="large" wrap>
+          <Card
+            hoverable
+            style={{
+              width: 200,
+              border: selectedWeightSegment === null ? '2px solid #1890ff' : '1px solid #d9d9d9',
+              cursor: 'pointer',
+            }}
+            onClick={() => setSelectedWeightSegment(null)}
+          >
+            <Statistic
+              title="总运费明细"
+              value="全部"
+              valueStyle={{ color: selectedWeightSegment === null ? '#1890ff' : '#000' }}
+            />
+            <div style={{ marginTop: 8, fontSize: '12px', color: '#999' }}>
+              查看所有重量段数据
+            </div>
+          </Card>
+          
+          {WEIGHT_SEGMENTS.map(segment => (
+            <Card
+              key={segment.key}
+              hoverable
+              style={{
+                width: 200,
+                border: selectedWeightSegment === segment.key ? '2px solid #1890ff' : '1px solid #d9d9d9',
+                cursor: 'pointer',
+              }}
+              onClick={() => setSelectedWeightSegment(segment.key)}
+            >
+              <Statistic
+                title={segment.label}
+                value={segment.desc}
+                valueStyle={{ 
+                  fontSize: '16px',
+                  color: selectedWeightSegment === segment.key ? '#1890ff' : '#000',
+                }}
+              />
+              <div style={{ marginTop: 8, fontSize: '12px', color: '#999' }}>
+                点击查看该公斤段数据
+              </div>
+            </Card>
+          ))}
+        </Space>
       </Card>
 
-      <Divider />
-
-      {/* 分公斤段表格 */}
+      {/* 数据明细表格 */}
       <Card 
         title={
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <LineChartOutlined style={{ marginRight: 8, fontSize: 18 }} />
             <span style={{ fontSize: 16, fontWeight: 'bold' }}>
-              分公斤段运费明细
+              {selectedWeightSegment 
+                ? `${WEIGHT_SEGMENTS.find(s => s.key === selectedWeightSegment)?.label} 明细`
+                : `总运费明细`} 
+              ({data.summary.dateRange.start} 至 {data.summary.dateRange.end})
             </span>
           </div>
         }
       >
         <Table
-          columns={weightSegmentColumns}
-          dataSource={weightSegmentTableData}
+          columns={tableColumns}
+          dataSource={tableData}
           bordered
           size="small"
           pagination={false}
