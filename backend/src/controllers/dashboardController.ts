@@ -114,7 +114,7 @@ export const getDashboardData = async (_req: Request, res: Response): Promise<vo
 
     // ==================== 第一步：数据预处理 ====================
     // 排除指定渠道，并重命名"头条放心购"为"抖音"
-    const excludedPlatforms = ['微盟', '微商城', '一定货'];
+    const excludedPlatforms = ['微盟', '微商城', '微盟微商城', '易订货'];
     const records = allRecords
       .filter(r => {
         const platform = r.platform || '未知';
