@@ -1,0 +1,17 @@
+# Zeabur 配置文件
+services:
+  - name: backend
+    path: backend
+    dockerfile: Dockerfile
+    port: 8080
+    env:
+      PORT: "8080"
+      NODE_ENV: "production"
+    
+  - name: frontend
+    path: frontend
+    dockerfile: Dockerfile
+    port: 8080
+    buildArgs:
+      VITE_API_URL: "https://freight-api.zeabur.app"
+
