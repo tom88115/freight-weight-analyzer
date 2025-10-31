@@ -203,9 +203,18 @@ const OperationsDashboard = () => {
     const segment = WEIGHT_SEGMENTS.find(s => s.key === selectedWeightSegment);
     if (!segment || rawRecords.length === 0) return data;
 
-    // 筛选符合公斤段的记录
+    // 需要排除的渠道
+    const excludedChannels = ['微盟', '微商城', '微盟微商城', '易订货', '微信视频号', '小红书', '快手电商'];
+    
+    // 筛选符合公斤段的记录，并排除不需要的渠道
     const filteredRecords = rawRecords.filter((record: any) => {
       const weight = record.weight;
+      const platform = record.platform || '未知';
+      
+      // 排除不需要的渠道
+      if (excludedChannels.includes(platform)) return false;
+      
+      // 筛选公斤段
       return weight >= segment.min && weight <= segment.max;
     });
 
@@ -223,7 +232,13 @@ const OperationsDashboard = () => {
 
     filteredRecords.forEach((record: any) => {
       const date = new Date(record.date).toISOString().split('T')[0];
-      const channel = record.platform || '未知';
+      let channel = record.platform || '未知';
+      
+      // 重命名"头条放心购"为"抖音"
+      if (channel === '头条放心购') {
+        channel = '抖音';
+      }
+      
       const orderAmount = record.orderAmount || 0;
       const freight = record.cost || 0;
 
