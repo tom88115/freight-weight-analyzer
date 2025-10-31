@@ -436,17 +436,17 @@ const OperationsDashboard = () => {
               <span>销售额占比 {summary.salesRatio.toFixed(1)}%</span>
               <span>月均运费占比 {summary.avgFreightRatio.toFixed(2)}%</span>
             </div>
-            {/* 运费占比趋势图 */}
+            {/* 订单交付费比趋势图 */}
             <div style={{ marginBottom: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ fontSize: '11px', color: '#999', textAlign: 'center', marginBottom: 2 }}>运费占比趋势</div>
+              <div style={{ fontSize: '11px', color: '#999', textAlign: 'center', marginBottom: 2 }}>订单交付费比趋势</div>
               <div 
                 id={`freight-ratio-trend-${channel}-${selectedWeightSegment || 'total'}`}
                 style={{ width: '260px', height: 50, position: 'relative' }}
               />
             </div>
-            {/* 订单金额趋势图 */}
+            {/* 销售额趋势图 */}
             <div style={{ marginBottom: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ fontSize: '11px', color: '#999', textAlign: 'center', marginBottom: 2 }}>订单金额趋势</div>
+              <div style={{ fontSize: '11px', color: '#999', textAlign: 'center', marginBottom: 2 }}>销售额趋势</div>
               <div 
                 id={`order-amount-trend-${channel}-${selectedWeightSegment || 'total'}`}
                 style={{ width: '260px', height: 50, position: 'relative' }}
