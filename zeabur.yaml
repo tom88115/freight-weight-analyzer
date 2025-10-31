@@ -1,15 +1,16 @@
 # Zeabur 配置文件
-services:
-  - name: backend
-    dockerfile: backend/Dockerfile
-    port: 8080
-    env:
-      PORT: "8080"
-      NODE_ENV: "production"
+# 后端服务配置
+backend:
+  dockerfile: backend/Dockerfile
+  port: 8080
+  environment:
+    PORT: 8080
+    NODE_ENV: production
     
-  - name: frontend
-    dockerfile: frontend/Dockerfile
-    port: 8080
-    buildArgs:
-      VITE_API_BASE_URL: "https://freight-api.zeabur.app"
+# 前端服务配置  
+frontend:
+  dockerfile: frontend/Dockerfile
+  port: 8080
+  build_args:
+    VITE_API_BASE_URL: https://freight-api.zeabur.app
 
