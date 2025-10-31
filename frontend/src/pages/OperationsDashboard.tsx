@@ -9,12 +9,12 @@ import 'dayjs/locale/zh-cn';
 
 dayjs.locale('zh-cn');
 
-// ===================== 渠道Logo映射 =====================
+// ===================== 渠道Logo映射（使用可靠的SVG图标） =====================
 const CHANNEL_LOGOS: { [key: string]: string } = {
-  '拼多多': 'https://commimg.pddpic.com/pdd_dj/2022-08-08/8c13da93-fa82-455a-9ef5-c1945540c375.png',
-  '淘宝天猫': 'https://img.alicdn.com/imgextra/i4/O1CN01EYTRnM1aJ5ETFTKJK_!!6000000003303-2-tps-100-100.png',
-  '抖音': 'https://lf-cdn-tos.bytescm.com/obj/static/xitu_extension/static/icon.png',
-  '京东商城': 'https://storage.360buyimg.com/jdvideo-activity-bucket/pc_top_logo_new_1654851342699.png',
+  '拼多多': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHJ4PSI2IiBmaWxsPSIjRTAyRTI0Ii8+PHRleHQgeD0iNTAlIiB5PSI1NSUiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IndoaXRlIiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+5ou8PC90ZXh0Pjwvc3ZnPg==',
+  '淘宝天猫': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHJ4PSI2IiBmaWxsPSIjRkY2NjAwIi8+PHRleHQgeD0iNTAlIiB5PSI1NSUiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IndoaXRlIiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+5reYPC90ZXh0Pjwvc3ZnPg==',
+  '抖音': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHJ4PSI2IiBmaWxsPSIjMDAwMDAwIi8+PHRleHQgeD0iNTAlIiB5PSI1NSUiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IndoaXRlIiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+5oqWPC90ZXh0Pjwvc3ZnPg==',
+  '京东商城': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHJ4PSI2IiBmaWxsPSIjRTMwMDFCIi8+PHRleHQgeD0iNTAlIiB5PSI1NSUiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IndoaXRlIiBmb250LXdlaWdodD0iYm9sZCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+5LqsPC90ZXh0Pjwvc3ZnPg==',
 };
 
 // ===================== 公斤段定义 =====================
@@ -47,18 +47,6 @@ interface ChannelSummary {
   orderCount: number;
 }
 
-interface WeightDistribution {
-  channel: string;
-  weights: {
-    [weightRange: string]: {
-      freight: number;
-      freightRatio: number;
-      orderCount: number;
-      avgFreight: number;
-    };
-  };
-}
-
 interface DashboardData {
   summary: {
     totalOrderAmount: number;
@@ -69,7 +57,6 @@ interface DashboardData {
   };
   channelTrends: ChannelTrendDay[];
   channelSummaries: ChannelSummary[];
-  weightDistributions: WeightDistribution[];
 }
 
 interface TableDataRow {
@@ -82,13 +69,29 @@ interface TableDataRow {
 
 // ===================== 工具函数 =====================
 /**
- * 数字格式化：万元显示
+ * 数字格式化：万元显示（保留一位小数）或添加千位符
  */
-const formatCurrency = (value: number): string => {
-  if (value >= 10000) {
-    return `${Math.round(value / 10000)}万`;
+const formatCurrency = (value: number, channel?: string): string => {
+  if (!value) return '-';
+  
+  // 京东商城：直接显示数字 + 千位符
+  if (channel === '京东商城') {
+    return value.toLocaleString('zh-CN', { maximumFractionDigits: 0 });
   }
-  return Math.round(value).toString();
+  
+  // 其他渠道：万元显示（保留一位小数）
+  if (value >= 10000) {
+    return `${(value / 10000).toFixed(1)}万`;
+  }
+  return value.toLocaleString('zh-CN', { maximumFractionDigits: 0 });
+};
+
+/**
+ * 订单数格式化：添加千位符
+ */
+const formatOrderCount = (value: number): string => {
+  if (!value) return '-';
+  return value.toLocaleString('zh-CN');
 };
 
 /**
@@ -101,36 +104,33 @@ const getWeekday = (dateStr: string): string => {
 };
 
 /**
- * 获取渠道内运费占比的颜色（基于该渠道的百分位数）
+ * 获取渠道内运费占比的颜色（基于该渠道的百分位数）- 优化对比度
  */
 const getChannelFreightRatioColor = (ratio: number, allRatios: number[]): string => {
-  if (allRatios.length === 0) return '#52c41a';
+  if (allRatios.length === 0) return '#389e0d'; // 深绿色
   
   const sorted = [...allRatios].sort((a, b) => a - b);
   const p33 = sorted[Math.floor(sorted.length * 0.33)];
   const p66 = sorted[Math.floor(sorted.length * 0.66)];
   
-  if (ratio <= p33) return '#52c41a'; // 绿色：低于33%分位
-  if (ratio <= p66) return '#faad14'; // 黄色：33%-66%分位
-  return '#ff4d4f'; // 红色：高于66%分位
+  if (ratio <= p33) return '#389e0d'; // 深绿色：低于33%分位
+  if (ratio <= p66) return '#d48806'; // 深黄色：33%-66%分位
+  return '#cf1322'; // 红色：高于66%分位
 };
 
 /**
- * 判断重量是否在指定公斤段范围内
+ * 获取渠道内运费占比的背景色
  */
-const isInWeightSegment = (weightRange: string, segmentKey: string): boolean => {
-  const segment = WEIGHT_SEGMENTS.find(s => s.key === segmentKey);
-  if (!segment) return false;
+const getChannelFreightRatioBgColor = (ratio: number, allRatios: number[]): string => {
+  if (allRatios.length === 0) return '#f6ffed';
   
-  // 从weightRange中提取数字范围，例如 "2-3kg" -> [2, 3]
-  const match = weightRange.match(/(\d+\.?\d*)-(\d+\.?\d*)/);
-  if (!match) return false;
+  const sorted = [...allRatios].sort((a, b) => a - b);
+  const p33 = sorted[Math.floor(sorted.length * 0.33)];
+  const p66 = sorted[Math.floor(sorted.length * 0.66)];
   
-  const rangeMin = parseFloat(match[1]);
-  const rangeMax = parseFloat(match[2]);
-  
-  // 判断是否有重叠
-  return !(rangeMax <= segment.min || rangeMin >= segment.max);
+  if (ratio <= p33) return '#f6ffed'; // 浅绿背景
+  if (ratio <= p66) return '#fffbe6'; // 浅黄背景
+  return '#fff1f0'; // 浅红背景
 };
 
 // ===================== 主组件 =====================
@@ -139,8 +139,9 @@ const OperationsDashboard = () => {
   const [loadingStep, setLoadingStep] = useState('初始化...');
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [data, setData] = useState<DashboardData | null>(null);
-  const [dateOrder, setDateOrder] = useState<'asc' | 'desc'>('asc'); // 日期排序
-  const [selectedWeightSegment, setSelectedWeightSegment] = useState<string | null>(null); // 选中的公斤段
+  const [rawRecords, setRawRecords] = useState<any[]>([]); // 存储原始记录用于筛选
+  const [dateOrder, setDateOrder] = useState<'asc' | 'desc'>('desc'); // 默认倒序
+  const [selectedWeightSegment, setSelectedWeightSegment] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -155,18 +156,31 @@ const OperationsDashboard = () => {
       setLoadingProgress(30);
       setLoadingStep('正在获取数据...');
       
-      const response = await axios.get('http://localhost:3000/api/dashboard', {
+      // 获取仪表板数据
+      const dashboardResponse = await axios.get('http://localhost:3000/api/dashboard', {
         timeout: 30000,
       });
       
-      setLoadingProgress(70);
+      setLoadingProgress(60);
+      setLoadingStep('正在获取原始记录...');
+      
+      // 获取原始记录用于公斤段筛选（不分页，获取所有记录）
+      const recordsResponse = await axios.get('http://localhost:3000/api/analytics/records', {
+        params: { limit: 999999 }, // 获取所有记录
+        timeout: 30000,
+      });
+      
+      setLoadingProgress(80);
       setLoadingStep('正在处理数据...');
       
-      if (response.data.success) {
-        setData(response.data.data);
+      if (dashboardResponse.data.success) {
+        setData(dashboardResponse.data.data);
+        if (recordsResponse.data.success) {
+          setRawRecords(recordsResponse.data.data || []);
+        }
         setLoadingProgress(100);
         setLoadingStep('加载完成！');
-        message.success(`成功加载 ${response.data.data.summary.orderCount.toLocaleString()} 条订单数据`);
+        message.success(`成功加载 ${dashboardResponse.data.data.summary.orderCount.toLocaleString()} 条订单数据`);
       } else {
         message.error('获取数据失败');
       }
@@ -182,19 +196,122 @@ const OperationsDashboard = () => {
     }
   };
 
-  // ==================== 计算表格数据（总运费或分公斤段） ====================
-  const tableData = useMemo(() => {
-    if (!data) return [];
-
-    const { channelTrends } = data;
-    let filteredTrends = channelTrends;
-
-    // 如果选中了公斤段，则需要从原始数据中筛选
-    // 注意：这里需要后端提供更详细的数据，暂时使用全量数据
+  // ==================== 按公斤段筛选数据 ====================
+  const filteredData = useMemo(() => {
+    if (!data || !selectedWeightSegment) return data;
     
+    const segment = WEIGHT_SEGMENTS.find(s => s.key === selectedWeightSegment);
+    if (!segment || rawRecords.length === 0) return data;
+
+    // 筛选符合公斤段的记录
+    const filteredRecords = rawRecords.filter((record: any) => {
+      const weight = record.weight;
+      return weight >= segment.min && weight <= segment.max;
+    });
+
+    if (filteredRecords.length === 0) {
+      message.warning(`${segment.label} 暂无数据`);
+      return data;
+    }
+
+    // 重新计算该公斤段的统计数据
+    const dateMap = new Map<string, Map<string, { orderAmount: number; freight: number; orderCount: number }>>();
+    const channelTotals = new Map<string, { orderAmount: number; freight: number; orderCount: number }>();
+    let totalOrderAmount = 0;
+    let totalFreight = 0;
+    let totalOrderCount = 0;
+
+    filteredRecords.forEach((record: any) => {
+      const date = new Date(record.date).toISOString().split('T')[0];
+      const channel = record.platform || '未知';
+      const orderAmount = record.orderAmount || 0;
+      const freight = record.cost || 0;
+
+      // 按日期和渠道分组
+      if (!dateMap.has(date)) {
+        dateMap.set(date, new Map());
+      }
+      const channelMap = dateMap.get(date)!;
+      if (!channelMap.has(channel)) {
+        channelMap.set(channel, { orderAmount: 0, freight: 0, orderCount: 0 });
+      }
+      const stats = channelMap.get(channel)!;
+      stats.orderAmount += orderAmount;
+      stats.freight += freight;
+      stats.orderCount += 1;
+
+      // 渠道总计
+      if (!channelTotals.has(channel)) {
+        channelTotals.set(channel, { orderAmount: 0, freight: 0, orderCount: 0 });
+      }
+      const channelTotal = channelTotals.get(channel)!;
+      channelTotal.orderAmount += orderAmount;
+      channelTotal.freight += freight;
+      channelTotal.orderCount += 1;
+
+      // 全局总计
+      totalOrderAmount += orderAmount;
+      totalFreight += freight;
+      totalOrderCount += 1;
+    });
+
+    // 构建新的 channelTrends
+    const newChannelTrends: ChannelTrendDay[] = [];
+    const sortedDates = Array.from(dateMap.keys()).sort();
+    
+    for (const date of sortedDates) {
+      const channelMap = dateMap.get(date)!;
+      const channels: { [key: string]: any } = {};
+      
+      for (const [channel, stats] of channelMap) {
+        channels[channel] = {
+          orderAmount: stats.orderAmount,
+          freight: stats.freight,
+          orderCount: stats.orderCount,
+          freightRatio: stats.orderAmount > 0 ? (stats.freight / stats.orderAmount) * 100 : 0,
+        };
+      }
+      
+      newChannelTrends.push({ date, channels });
+    }
+
+    // 构建新的 channelSummaries
+    const newChannelSummaries: ChannelSummary[] = [];
+    for (const [channel, totals] of channelTotals) {
+      newChannelSummaries.push({
+        channel,
+        salesRatio: totalOrderAmount > 0 ? (totals.orderAmount / totalOrderAmount) * 100 : 0,
+        totalOrderAmount: totals.orderAmount,
+        totalFreight: totals.freight,
+        avgFreightRatio: totals.orderAmount > 0 ? (totals.freight / totals.orderAmount) * 100 : 0,
+        orderCount: totals.orderCount,
+      });
+    }
+
+    // 按销售额占比排序
+    newChannelSummaries.sort((a, b) => b.salesRatio - a.salesRatio);
+
+    return {
+      summary: {
+        totalOrderAmount,
+        totalFreight,
+        overallFreightRatio: totalOrderAmount > 0 ? (totalFreight / totalOrderAmount) * 100 : 0,
+        orderCount: totalOrderCount,
+        dateRange: data.summary.dateRange,
+      },
+      channelTrends: newChannelTrends,
+      channelSummaries: newChannelSummaries,
+    };
+  }, [data, selectedWeightSegment, rawRecords]);
+
+  // ==================== 计算表格数据 ====================
+  const tableData = useMemo(() => {
+    if (!filteredData) return [];
+
+    const { channelTrends } = filteredData;
     const tableData: TableDataRow[] = [];
 
-    for (const trend of filteredTrends) {
+    for (const trend of channelTrends) {
       const row: TableDataRow = {
         key: trend.date,
         date: trend.date,
@@ -218,11 +335,11 @@ const OperationsDashboard = () => {
       const dateB = new Date(b.date).getTime();
       return dateOrder === 'asc' ? dateA - dateB : dateB - dateA;
     });
-  }, [data, dateOrder, selectedWeightSegment]);
+  }, [filteredData, dateOrder]);
 
   // ==================== 计算表格列 ====================
   const tableColumns = useMemo((): ColumnsType<TableDataRow> => {
-    if (!data) return [];
+    if (!filteredData) return [];
 
     const columns: ColumnsType<TableDataRow> = [
       {
@@ -251,40 +368,42 @@ const OperationsDashboard = () => {
       },
     ];
 
-    // 按销售额占比排序的渠道
-    const sortedChannels = [...data.channelSummaries].sort((a, b) => b.salesRatio - a.salesRatio);
+    const sortedChannels = [...filteredData.channelSummaries].sort((a, b) => b.salesRatio - a.salesRatio);
 
     for (const summary of sortedChannels) {
       const channel = summary.channel;
       
-      // 获取该渠道所有日期的运费占比，用于颜色编码
-      const channelRatios = data.channelTrends
+      const channelRatios = filteredData.channelTrends
         .map(t => t.channels[channel]?.freightRatio)
         .filter((r): r is number => r !== undefined);
 
       columns.push({
         title: (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
-              {CHANNEL_LOGOS[channel] && (
-                <img 
-                  src={CHANNEL_LOGOS[channel]} 
-                  alt={channel} 
-                  style={{ width: 24, height: 24, marginRight: 6, objectFit: 'contain' }}
-                />
-              )}
-              <strong>{channel}</strong>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6 }}>
+              <img 
+                src={CHANNEL_LOGOS[channel]} 
+                alt={channel} 
+                style={{ width: 24, height: 24, marginRight: 6 }}
+              />
+              <strong style={{ fontSize: '14px' }}>{channel}</strong>
             </div>
-            <div style={{ fontSize: '12px', color: '#999', marginBottom: 4 }}>
-              销售额占比 {summary.salesRatio.toFixed(1)}%
-            </div>
-            <div style={{ fontSize: '12px', color: '#666' }}>
-              月平均运费占比 {summary.avgFreightRatio.toFixed(2)}%
+            {/* 横向排列两个数据 */}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              gap: '12px',
+              fontSize: '12px',
+              color: '#666',
+              marginBottom: 6,
+            }}>
+              <span>销售额占比 {summary.salesRatio.toFixed(1)}%</span>
+              <span>月均运费占比 {summary.avgFreightRatio.toFixed(2)}%</span>
             </div>
             {/* 渠道运费占比趋势图 */}
             <div 
               id={`trend-${channel}-${selectedWeightSegment || 'total'}`}
-              style={{ width: '100%', height: 60, marginTop: 8 }}
+              style={{ width: '100%', height: 60, marginTop: 4 }}
             />
           </div>
         ),
@@ -297,7 +416,7 @@ const OperationsDashboard = () => {
             key: `${channel}_orderAmount`,
             align: 'right',
             width: 90,
-            render: (value: number) => value ? formatCurrency(value) : '-',
+            render: (value: number) => formatCurrency(value, channel),
           },
           {
             title: '运费',
@@ -305,7 +424,7 @@ const OperationsDashboard = () => {
             key: `${channel}_freight`,
             align: 'right',
             width: 80,
-            render: (value: number) => value ? formatCurrency(value) : '-',
+            render: (value: number) => formatCurrency(value, channel),
           },
           {
             title: '运费占比',
@@ -316,13 +435,16 @@ const OperationsDashboard = () => {
             render: (ratio: number) => {
               if (!ratio) return '-';
               const color = getChannelFreightRatioColor(ratio, channelRatios);
+              const bgColor = getChannelFreightRatioBgColor(ratio, channelRatios);
               return (
                 <span style={{ 
                   color, 
                   fontWeight: 'bold',
-                  padding: '2px 8px',
+                  padding: '3px 8px',
                   borderRadius: 4,
-                  backgroundColor: `${color}20`,
+                  backgroundColor: bgColor,
+                  display: 'inline-block',
+                  minWidth: '60px',
                 }}>
                   {ratio.toFixed(2)}%
                 </span>
@@ -335,22 +457,21 @@ const OperationsDashboard = () => {
             key: `${channel}_orderCount`,
             align: 'center',
             width: 70,
-            render: (value: number) => value || '-',
+            render: (value: number) => formatOrderCount(value),
           },
         ],
       });
     }
 
     return columns;
-  }, [data, dateOrder, selectedWeightSegment]);
+  }, [filteredData, dateOrder, selectedWeightSegment]);
 
   // ==================== 渲染趋势图 ====================
   useEffect(() => {
-    if (!data || !data.channelTrends.length) return;
+    if (!filteredData || !filteredData.channelTrends.length) return;
 
-    const sortedChannels = [...data.channelSummaries].sort((a, b) => b.salesRatio - a.salesRatio);
+    const sortedChannels = [...filteredData.channelSummaries].sort((a, b) => b.salesRatio - a.salesRatio);
 
-    // 为每个渠道渲染趋势图
     setTimeout(() => {
       sortedChannels.forEach(summary => {
         const channel = summary.channel;
@@ -361,8 +482,8 @@ const OperationsDashboard = () => {
 
         const myChart = echarts.init(container);
         
-        const dates = data.channelTrends.map(t => dayjs(t.date).format('MM-DD'));
-        const ratios = data.channelTrends.map(t => t.channels[channel]?.freightRatio || 0);
+        const dates = filteredData.channelTrends.map(t => dayjs(t.date).format('MM-DD'));
+        const ratios = filteredData.channelTrends.map(t => t.channels[channel]?.freightRatio || 0);
 
         const option = {
           grid: {
@@ -410,7 +531,7 @@ const OperationsDashboard = () => {
         myChart.setOption(option);
       });
     }, 100);
-  }, [data, selectedWeightSegment]);
+  }, [filteredData, selectedWeightSegment]);
 
   if (loading) {
     return (
@@ -436,7 +557,7 @@ const OperationsDashboard = () => {
     );
   }
 
-  if (!data) {
+  if (!filteredData) {
     return <div style={{ textAlign: 'center', padding: 50 }}>暂无数据</div>;
   }
 
@@ -448,7 +569,7 @@ const OperationsDashboard = () => {
           <Col span={6}>
             <Statistic 
               title="总订单金额" 
-              value={data.summary.totalOrderAmount} 
+              value={filteredData.summary.totalOrderAmount} 
               precision={0}
               suffix="元"
               valueStyle={{ color: '#1890ff' }}
@@ -457,7 +578,7 @@ const OperationsDashboard = () => {
           <Col span={6}>
             <Statistic 
               title="总运费" 
-              value={data.summary.totalFreight} 
+              value={filteredData.summary.totalFreight} 
               precision={0}
               suffix="元"
               valueStyle={{ color: '#cf1322' }}
@@ -466,7 +587,7 @@ const OperationsDashboard = () => {
           <Col span={6}>
             <Statistic 
               title="整体运费占比" 
-              value={data.summary.overallFreightRatio} 
+              value={filteredData.summary.overallFreightRatio} 
               precision={2}
               suffix="%"
               valueStyle={{ color: '#52c41a' }}
@@ -475,7 +596,7 @@ const OperationsDashboard = () => {
           <Col span={6}>
             <Statistic 
               title="订单总数" 
-              value={data.summary.orderCount} 
+              value={filteredData.summary.orderCount} 
               precision={0}
             />
           </Col>
@@ -540,7 +661,7 @@ const OperationsDashboard = () => {
               {selectedWeightSegment 
                 ? `${WEIGHT_SEGMENTS.find(s => s.key === selectedWeightSegment)?.label} 明细`
                 : `总运费明细`} 
-              ({data.summary.dateRange.start} 至 {data.summary.dateRange.end})
+              ({filteredData.summary.dateRange.start} 至 {filteredData.summary.dateRange.end})
             </span>
           </div>
         }
