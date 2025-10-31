@@ -437,28 +437,28 @@ const OperationsDashboard = () => {
               <span>月均运费占比 {summary.avgFreightRatio.toFixed(2)}%</span>
             </div>
             {/* 运费占比趋势图 */}
-            <div style={{ marginBottom: 4 }}>
+            <div style={{ marginBottom: 8 }}>
               <div style={{ fontSize: '11px', color: '#999', textAlign: 'center', marginBottom: 2 }}>运费占比趋势</div>
               <div 
                 id={`freight-ratio-trend-${channel}-${selectedWeightSegment || 'total'}`}
-                style={{ width: '100%', height: 50 }}
+                style={{ width: '100%', height: 50, position: 'relative' }}
               />
             </div>
             {/* 订单金额趋势图 */}
-            <div style={{ marginBottom: 4 }}>
+            <div style={{ marginBottom: 8 }}>
               <div style={{ fontSize: '11px', color: '#999', textAlign: 'center', marginBottom: 2 }}>订单金额趋势</div>
               <div 
                 id={`order-amount-trend-${channel}-${selectedWeightSegment || 'total'}`}
-                style={{ width: '100%', height: 50 }}
+                style={{ width: '100%', height: 50, position: 'relative' }}
               />
             </div>
             {/* 订单数占比趋势图（仅在公斤段筛选时显示） */}
             {selectedWeightSegment && (
-              <div style={{ marginBottom: 4 }}>
+              <div style={{ marginBottom: 8 }}>
                 <div style={{ fontSize: '11px', color: '#999', textAlign: 'center', marginBottom: 2 }}>订单数占比趋势</div>
                 <div 
                   id={`order-count-ratio-trend-${channel}-${selectedWeightSegment}`}
-                  style={{ width: '100%', height: 50 }}
+                  style={{ width: '100%', height: 50, position: 'relative' }}
                 />
               </div>
             )}
@@ -553,10 +553,10 @@ const OperationsDashboard = () => {
 
           const freightRatioOption = {
             grid: {
-              left: 5,
-              right: 5,
-              top: 5,
-              bottom: 5,
+              left: 8,
+              right: 8,
+              top: 8,
+              bottom: 8,
             },
             xAxis: {
               type: 'category',
@@ -608,10 +608,10 @@ const OperationsDashboard = () => {
 
           const orderAmountOption = {
             grid: {
-              left: 5,
-              right: 5,
-              top: 5,
-              bottom: 5,
+              left: 8,
+              right: 8,
+              top: 8,
+              bottom: 8,
             },
             xAxis: {
               type: 'category',
@@ -671,10 +671,10 @@ const OperationsDashboard = () => {
 
             const orderCountRatioOption = {
               grid: {
-                left: 5,
-                right: 5,
-                top: 5,
-                bottom: 5,
+                left: 8,
+                right: 8,
+                top: 8,
+                bottom: 8,
               },
               xAxis: {
                 type: 'category',
@@ -824,17 +824,17 @@ const OperationsDashboard = () => {
               }}
               onClick={() => setSelectedWeightSegment(segment.key)}
             >
-              <Statistic
-                title={segment.label}
-                value={segment.desc}
-                valueStyle={{ 
-                  fontSize: '16px',
-                  color: selectedWeightSegment === segment.key ? '#1890ff' : '#000',
-                }}
-              />
-              <div style={{ marginTop: 8, fontSize: '12px', color: '#999' }}>
-                点击查看该公斤段数据
-              </div>
+            <Statistic
+              title={segment.label}
+              value={`${segment.desc}重量范围`}
+              valueStyle={{ 
+                fontSize: '16px',
+                color: selectedWeightSegment === segment.key ? '#1890ff' : '#000',
+              }}
+            />
+            <div style={{ marginTop: 8, fontSize: '12px', color: '#999' }}>
+              点击查看该重量范围数据
+            </div>
             </Card>
           ))}
         </Space>
