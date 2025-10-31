@@ -13,6 +13,7 @@ import OperationsDashboard from './pages/OperationsDashboard';
 import Dashboard from './pages/Dashboard';
 import MultiDimensionAnalysis from './pages/MultiDimensionAnalysis';
 import FreightAnalysisReport from './pages/FreightAnalysisReport';
+import UploadData from './pages/UploadData';
 import 'dayjs/locale/zh-cn';
 
 const { Header, Content } = Layout;
@@ -63,7 +64,7 @@ const App: React.FC = () => {
           <Content style={{ background: '#f0f2f5' }}>
             <Routes>
               <Route path="/" element={<OperationsDashboard />} />
-              <Route path="/upload" element={<Dashboard />} />
+              <Route path="/upload" element={<UploadData />} />
               <Route path="/data-table" element={<Dashboard />} />
               <Route path="/multi-dimension" element={<MultiDimensionAnalysis />} />
               <Route path="/freight-report" element={<FreightAnalysisReport />} />
