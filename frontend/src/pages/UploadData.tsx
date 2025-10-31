@@ -322,7 +322,7 @@ const UploadData: React.FC = () => {
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
           <Alert
             message="文件验证完成"
-            description="请查看以下验证结果，确认无误后点击"确认导入"按钮。"
+            description="请查看以下验证结果，确认无误后点击【确认导入】按钮。"
             type="success"
             showIcon
           />
@@ -523,11 +523,11 @@ const UploadData: React.FC = () => {
       {!validationResult && !uploadResult && (
         <Card title="使用说明" style={{ marginTop: 24 }} size="small">
           <Space direction="vertical" size="small">
-            <Text>📌 <strong>去重规则：</strong>系统使用"物流单号 + 日期"作为唯一标识</Text>
+            <Text>📌 <strong>去重规则：</strong>系统使用【物流单号 + 日期】作为唯一标识</Text>
             <Text>📌 <strong>文件格式：</strong>支持 Excel (.xlsx, .xls) 和 CSV (.csv)</Text>
             <Text>📌 <strong>文件大小：</strong>不超过 50MB</Text>
             <Text>📌 <strong>必需字段：</strong>物流单号、出库单时间、计算重量、运费、平台、订单金额</Text>
-            <Text>📌 <strong>查看数据：</strong>上传成功后，点击"查看运营分析"或直接刷新首页即可查看最新数据</Text>
+            <Text>📌 <strong>查看数据：</strong>上传成功后，点击【查看运营分析】或直接刷新首页即可查看最新数据</Text>
           </Space>
         </Card>
       )}
