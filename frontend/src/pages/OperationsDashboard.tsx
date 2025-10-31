@@ -437,28 +437,28 @@ const OperationsDashboard = () => {
               <span>月均运费占比 {summary.avgFreightRatio.toFixed(2)}%</span>
             </div>
             {/* 运费占比趋势图 */}
-            <div style={{ marginBottom: 8 }}>
+            <div style={{ marginBottom: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <div style={{ fontSize: '11px', color: '#999', textAlign: 'center', marginBottom: 2 }}>运费占比趋势</div>
               <div 
                 id={`freight-ratio-trend-${channel}-${selectedWeightSegment || 'total'}`}
-                style={{ width: '100%', height: 50, position: 'relative' }}
+                style={{ width: '220px', height: 50, position: 'relative' }}
               />
             </div>
             {/* 订单金额趋势图 */}
-            <div style={{ marginBottom: 8 }}>
+            <div style={{ marginBottom: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
               <div style={{ fontSize: '11px', color: '#999', textAlign: 'center', marginBottom: 2 }}>订单金额趋势</div>
               <div 
                 id={`order-amount-trend-${channel}-${selectedWeightSegment || 'total'}`}
-                style={{ width: '100%', height: 50, position: 'relative' }}
+                style={{ width: '220px', height: 50, position: 'relative' }}
               />
             </div>
             {/* 订单数占比趋势图（仅在公斤段筛选时显示） */}
             {selectedWeightSegment && (
-              <div style={{ marginBottom: 8 }}>
+              <div style={{ marginBottom: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div style={{ fontSize: '11px', color: '#999', textAlign: 'center', marginBottom: 2 }}>订单数占比趋势</div>
                 <div 
                   id={`order-count-ratio-trend-${channel}-${selectedWeightSegment}`}
-                  style={{ width: '100%', height: 50, position: 'relative' }}
+                  style={{ width: '220px', height: 50, position: 'relative' }}
                 />
               </div>
             )}
