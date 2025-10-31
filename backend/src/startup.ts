@@ -5,6 +5,7 @@ import uploadRoutes from './routes/uploadRoutes';
 import analyticsRoutes from './routes/analyticsRoutes';
 import multiDimensionRoutes from './routes/multiDimensionRoutes';
 import freightReportRoutes from './routes/freightReportRoutes';
+import dashboardRoutes from './routes/dashboardRoutes';
 import * as XLSX from 'xlsx';
 import { memoryStorage } from './storage/memoryStorage';
 import { FreightRecord } from './types';
@@ -24,6 +25,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // 路由
+app.use('/api/dashboard', dashboardRoutes);  // 新增：仪表板数据API
 app.use('/api/upload', uploadRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/multi-dimension', multiDimensionRoutes);
