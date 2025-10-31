@@ -397,9 +397,8 @@ const OperationsDashboard = () => {
         width: 100,
         align: 'center',
         render: (text: string, record: TableDataRow) => (
-          <div>
-            <div>{text}</div>
-            <div style={{ fontSize: '12px', color: '#999' }}>周{record.weekday}</div>
+          <div style={{ lineHeight: '1.3' }}>
+            {text} 周{record.weekday}
           </div>
         ),
       },
@@ -453,14 +452,16 @@ const OperationsDashboard = () => {
                 style={{ width: '100%', height: 50 }}
               />
             </div>
-            {/* 订单数占比趋势图（新增） */}
-            <div>
-              <div style={{ fontSize: '11px', color: '#999', textAlign: 'center', marginBottom: 2 }}>订单数占比趋势</div>
-              <div 
-                id={`order-count-ratio-trend-${channel}-${selectedWeightSegment || 'total'}`}
-                style={{ width: '100%', height: 50 }}
-              />
-            </div>
+            {/* 订单数占比趋势图（仅在公斤段筛选时显示） */}
+            {selectedWeightSegment && (
+              <div style={{ marginBottom: 4 }}>
+                <div style={{ fontSize: '11px', color: '#999', textAlign: 'center', marginBottom: 2 }}>订单数占比趋势</div>
+                <div 
+                  id={`order-count-ratio-trend-${channel}-${selectedWeightSegment}`}
+                  style={{ width: '100%', height: 50 }}
+                />
+              </div>
+            )}
           </div>
         ),
         key: channel,
@@ -651,68 +652,70 @@ const OperationsDashboard = () => {
           orderAmountChart.setOption(orderAmountOption);
         }
 
-        // ========== 3. 订单数占比趋势图（新增：渠道内该公斤段订单数占比） ==========
-        const orderCountRatioContainerId = `order-count-ratio-trend-${channel}-${selectedWeightSegment || 'total'}`;
-        const orderCountRatioContainer = document.getElementById(orderCountRatioContainerId);
-        
-        if (orderCountRatioContainer) {
-          const orderCountRatios = filteredData.channelTrends.map(t => t.channels[channel]?.orderCountRatio || 0);
-          const orderCountRatioChart = echarts.init(orderCountRatioContainer);
+        // ========== 3. 订单数占比趋势图（仅在公斤段筛选时显示） ==========
+        if (selectedWeightSegment) {
+          const orderCountRatioContainerId = `order-count-ratio-trend-${channel}-${selectedWeightSegment}`;
+          const orderCountRatioContainer = document.getElementById(orderCountRatioContainerId);
+          
+          if (orderCountRatioContainer) {
+            const orderCountRatios = filteredData.channelTrends.map(t => t.channels[channel]?.orderCountRatio || 0);
+            const orderCountRatioChart = echarts.init(orderCountRatioContainer);
 
-          // 计算订单数占比的最小值和最大值，以优化Y轴范围
-          const validOrderCountRatios = orderCountRatios.filter(r => r > 0);
-          const minOrderCountRatio = validOrderCountRatios.length > 0 ? Math.min(...validOrderCountRatios) : 0;
-          const maxOrderCountRatio = validOrderCountRatios.length > 0 ? Math.max(...validOrderCountRatios) : 10;
-          const orderCountRatioPadding = (maxOrderCountRatio - minOrderCountRatio) * 0.2;
-          const orderCountRatioYMin = Math.max(0, minOrderCountRatio - orderCountRatioPadding);
-          const orderCountRatioYMax = maxOrderCountRatio + orderCountRatioPadding;
+            // 计算订单数占比的最小值和最大值，以优化Y轴范围
+            const validOrderCountRatios = orderCountRatios.filter(r => r > 0);
+            const minOrderCountRatio = validOrderCountRatios.length > 0 ? Math.min(...validOrderCountRatios) : 0;
+            const maxOrderCountRatio = validOrderCountRatios.length > 0 ? Math.max(...validOrderCountRatios) : 10;
+            const orderCountRatioPadding = (maxOrderCountRatio - minOrderCountRatio) * 0.2;
+            const orderCountRatioYMin = Math.max(0, minOrderCountRatio - orderCountRatioPadding);
+            const orderCountRatioYMax = maxOrderCountRatio + orderCountRatioPadding;
 
-          const orderCountRatioOption = {
-            grid: {
-              left: 5,
-              right: 5,
-              top: 5,
-              bottom: 5,
-            },
-            xAxis: {
-              type: 'category',
-              data: dates,
-              show: false,
-            },
-            yAxis: {
-              type: 'value',
-              show: false,
-              min: orderCountRatioYMin,
-              max: orderCountRatioYMax,
-            },
-            series: [
-              {
-                data: orderCountRatios,
-                type: 'line',
-                smooth: true,
-                showSymbol: false,
-                lineStyle: {
-                  width: 2.5,
-                  color: '#722ed1', // 紫色
+            const orderCountRatioOption = {
+              grid: {
+                left: 5,
+                right: 5,
+                top: 5,
+                bottom: 5,
+              },
+              xAxis: {
+                type: 'category',
+                data: dates,
+                show: false,
+              },
+              yAxis: {
+                type: 'value',
+                show: false,
+                min: orderCountRatioYMin,
+                max: orderCountRatioYMax,
+              },
+              series: [
+                {
+                  data: orderCountRatios,
+                  type: 'line',
+                  smooth: true,
+                  showSymbol: false,
+                  lineStyle: {
+                    width: 2.5,
+                    color: '#722ed1', // 紫色
+                  },
+                  areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                      { offset: 0, color: 'rgba(114, 46, 209, 0.4)' },
+                      { offset: 1, color: 'rgba(114, 46, 209, 0.05)' },
+                    ]),
+                  },
                 },
-                areaStyle: {
-                  color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                    { offset: 0, color: 'rgba(114, 46, 209, 0.4)' },
-                    { offset: 1, color: 'rgba(114, 46, 209, 0.05)' },
-                  ]),
+              ],
+              tooltip: {
+                trigger: 'axis',
+                formatter: (params: any) => {
+                  const param = params[0];
+                  return `${param.name}<br/>订单数占比: ${param.value.toFixed(2)}%`;
                 },
               },
-            ],
-            tooltip: {
-              trigger: 'axis',
-              formatter: (params: any) => {
-                const param = params[0];
-                return `${param.name}<br/>订单数占比: ${param.value.toFixed(2)}%`;
-              },
-            },
-          };
+            };
 
-          orderCountRatioChart.setOption(orderCountRatioOption);
+            orderCountRatioChart.setOption(orderCountRatioOption);
+          }
         }
       });
     }, 100);
@@ -844,7 +847,10 @@ const OperationsDashboard = () => {
             <LineChartOutlined style={{ marginRight: 8, fontSize: 18 }} />
             <span style={{ fontSize: 16, fontWeight: 'bold' }}>
               {selectedWeightSegment 
-                ? `${WEIGHT_SEGMENTS.find(s => s.key === selectedWeightSegment)?.label} 明细`
+                ? (() => {
+                    const segment = WEIGHT_SEGMENTS.find(s => s.key === selectedWeightSegment);
+                    return segment ? `${segment.desc} → ${segment.label}` : '公斤段明细';
+                  })()
                 : `总运费明细`} 
               ({filteredData.summary.dateRange.start} 至 {filteredData.summary.dateRange.end})
             </span>
