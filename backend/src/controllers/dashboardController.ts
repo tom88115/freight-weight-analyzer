@@ -113,14 +113,27 @@ export const getDashboardData = async (_req: Request, res: Response): Promise<vo
     console.log('🔄 计算仪表板数据...');
 
     // ==================== 第一步：数据预处理 ====================
-    // 只提取必需字段，减少内存占用
-    const records = allRecords.map(r => ({
-      platform: r.platform || '未知',
-      date: new Date(r.date).toISOString().split('T')[0],
-      cost: r.cost,
-      orderAmount: r.orderAmount || 0,
-      weightRange: r.weightRange || getWeightRange(r.weight),
-    }));
+    // 排除指定渠道，并重命名"头条放心购"为"抖音"
+    const excludedPlatforms = ['微盟', '微商城', '一定货'];
+    const records = allRecords
+      .filter(r => {
+        const platform = r.platform || '未知';
+        return !excludedPlatforms.includes(platform);
+      })
+      .map(r => {
+        let platform = r.platform || '未知';
+        // 重命名"头条放心购"为"抖音"
+        if (platform === '头条放心购') {
+          platform = '抖音';
+        }
+        return {
+          platform,
+          date: new Date(r.date).toISOString().split('T')[0],
+          cost: r.cost,
+          orderAmount: r.orderAmount || 0,
+          weightRange: r.weightRange || getWeightRange(r.weight),
+        };
+      });
 
     // 获取所有唯一渠道
     const allChannels = Array.from(new Set(records.map(r => r.platform)));
