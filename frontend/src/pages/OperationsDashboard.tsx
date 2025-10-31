@@ -415,11 +415,22 @@ const OperationsDashboard = () => {
               <span>销售额占比 {summary.salesRatio.toFixed(1)}%</span>
               <span>月均运费占比 {summary.avgFreightRatio.toFixed(2)}%</span>
             </div>
-            {/* 渠道运费占比趋势图 */}
-            <div 
-              id={`trend-${channel}-${selectedWeightSegment || 'total'}`}
-              style={{ width: '100%', height: 60, marginTop: 4 }}
-            />
+            {/* 运费占比趋势图 */}
+            <div style={{ marginBottom: 4 }}>
+              <div style={{ fontSize: '11px', color: '#999', textAlign: 'center', marginBottom: 2 }}>运费占比趋势</div>
+              <div 
+                id={`freight-ratio-trend-${channel}-${selectedWeightSegment || 'total'}`}
+                style={{ width: '100%', height: 50 }}
+              />
+            </div>
+            {/* 订单金额趋势图 */}
+            <div>
+              <div style={{ fontSize: '11px', color: '#999', textAlign: 'center', marginBottom: 2 }}>订单金额趋势</div>
+              <div 
+                id={`order-amount-trend-${channel}-${selectedWeightSegment || 'total'}`}
+                style={{ width: '100%', height: 50 }}
+              />
+            </div>
           </div>
         ),
         key: channel,
@@ -490,60 +501,125 @@ const OperationsDashboard = () => {
     setTimeout(() => {
       sortedChannels.forEach(summary => {
         const channel = summary.channel;
-        const containerId = `trend-${channel}-${selectedWeightSegment || 'total'}`;
-        const container = document.getElementById(containerId);
-        
-        if (!container) return;
-
-        const myChart = echarts.init(container);
-        
         const dates = filteredData.channelTrends.map(t => dayjs(t.date).format('MM-DD'));
         const ratios = filteredData.channelTrends.map(t => t.channels[channel]?.freightRatio || 0);
+        const orderAmounts = filteredData.channelTrends.map(t => t.channels[channel]?.orderAmount || 0);
 
-        const option = {
-          grid: {
-            left: 10,
-            right: 10,
-            top: 10,
-            bottom: 10,
-          },
-          xAxis: {
-            type: 'category',
-            data: dates,
-            show: false,
-          },
-          yAxis: {
-            type: 'value',
-            show: false,
-          },
-          series: [
-            {
-              data: ratios,
-              type: 'line',
-              smooth: true,
-              showSymbol: false,
-              lineStyle: {
-                width: 2,
-                color: '#1890ff',
+        // ========== 1. 运费占比趋势图（优化波动展示） ==========
+        const freightRatioContainerId = `freight-ratio-trend-${channel}-${selectedWeightSegment || 'total'}`;
+        const freightRatioContainer = document.getElementById(freightRatioContainerId);
+        
+        if (freightRatioContainer) {
+          const freightRatioChart = echarts.init(freightRatioContainer);
+          
+          // 计算运费占比的最小值和最大值，以优化Y轴范围，突出波动
+          const validRatios = ratios.filter(r => r > 0);
+          const minRatio = validRatios.length > 0 ? Math.min(...validRatios) : 0;
+          const maxRatio = validRatios.length > 0 ? Math.max(...validRatios) : 10;
+          const padding = (maxRatio - minRatio) * 0.2; // 留出20%的空间
+          const yMin = Math.max(0, minRatio - padding); // 最小值不小于0
+          const yMax = maxRatio + padding;
+
+          const freightRatioOption = {
+            grid: {
+              left: 5,
+              right: 5,
+              top: 5,
+              bottom: 5,
+            },
+            xAxis: {
+              type: 'category',
+              data: dates,
+              show: false,
+            },
+            yAxis: {
+              type: 'value',
+              show: false,
+              min: yMin,
+              max: yMax,
+            },
+            series: [
+              {
+                data: ratios,
+                type: 'line',
+                smooth: true,
+                showSymbol: false,
+                lineStyle: {
+                  width: 2.5,
+                  color: '#ff7a45', // 橙红色，更醒目
+                },
+                areaStyle: {
+                  color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                    { offset: 0, color: 'rgba(255, 122, 69, 0.4)' },
+                    { offset: 1, color: 'rgba(255, 122, 69, 0.05)' },
+                  ]),
+                },
               },
-              areaStyle: {
-                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                  { offset: 0, color: 'rgba(24, 144, 255, 0.3)' },
-                  { offset: 1, color: 'rgba(24, 144, 255, 0.05)' },
-                ]),
+            ],
+            tooltip: {
+              trigger: 'axis',
+              formatter: (params: any) => {
+                const param = params[0];
+                return `${param.name}<br/>运费占比: ${param.value.toFixed(2)}%`;
               },
             },
-          ],
-          tooltip: {
-            trigger: 'axis',
-            formatter: (params: any) => {
-              const param = params[0];
-              return `${param.name}<br/>运费占比: ${param.value.toFixed(2)}%`;
-            },
-          },
-        };
+          };
 
-        myChart.setOption(option);
+          freightRatioChart.setOption(freightRatioOption);
+        }
+
+        // ========== 2. 订单金额趋势图 ==========
+        const orderAmountContainerId = `order-amount-trend-${channel}-${selectedWeightSegment || 'total'}`;
+        const orderAmountContainer = document.getElementById(orderAmountContainerId);
+        
+        if (orderAmountContainer) {
+          const orderAmountChart = echarts.init(orderAmountContainer);
+
+          const orderAmountOption = {
+            grid: {
+              left: 5,
+              right: 5,
+              top: 5,
+              bottom: 5,
+            },
+            xAxis: {
+              type: 'category',
+              data: dates,
+              show: false,
+            },
+            yAxis: {
+              type: 'value',
+              show: false,
+            },
+            series: [
+              {
+                data: orderAmounts,
+                type: 'line',
+                smooth: true,
+                showSymbol: false,
+                lineStyle: {
+                  width: 2.5,
+                  color: '#52c41a', // 绿色
+                },
+                areaStyle: {
+                  color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                    { offset: 0, color: 'rgba(82, 196, 26, 0.4)' },
+                    { offset: 1, color: 'rgba(82, 196, 26, 0.05)' },
+                  ]),
+                },
+              },
+            ],
+            tooltip: {
+              trigger: 'axis',
+              formatter: (params: any) => {
+                const param = params[0];
+                return `${param.name}<br/>订单金额: ¥${param.value.toLocaleString()}`;
+              },
+            },
+          };
+
+          orderAmountChart.setOption(orderAmountOption);
+        }
       });
     }, 100);
   }, [filteredData, selectedWeightSegment]);
